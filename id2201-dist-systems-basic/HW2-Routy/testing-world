@@ -1,0 +1,57 @@
+Commands for Testing on Different Shells
+
+130.229.190.152
+
+-> start shells
+erl -name brazil@130.229.190.152 -setcookie routy -connect_all false
+
+
+-> start router processes in brazil
+routy:start(rio, rio).
+routy:start(manaus, manaus).
+
+
+-> add links between rio and manaus
+rio ! {add, manaus, {manaus, 'brazil@130.229.190.152'}}.
+manaus ! {add, rio, {rio, 'brazil@130.229.190.152'}}.
+
+rio ! {add, istanbul, {istanbul, 'turkey@130.229.172.23'}}.
+
+
+## Gateway
+r3 ! {add, rio, {r2, 'brazil@130.229.190.152'}}.
+
+
+-> now see status of each
+r1 ! status.
+r2 ! status.
+
+-> now trigger link-state messages now
+r1 ! broadcast.
+r2 ! broadcast.
+
+rio ! broadcast.
+manaus ! broadcast.
+
+rio ! update.
+manaus ! update.
+
+-> now update routing table for each 
+r1 ! update.
+r2 ! update.
+
+-> Last part to send messsage now 
+r4 ! {send, rio, 'hello'}.
+r3 ! {send, rio, 'hello'}.
+r4 ! {send, manaus, 'hello'}.
+r3 ! {send, manaus, 'hello'}.
+
+r1 ! {send, milan, 'hello'}.
+r2 ! {send, milan, 'hello'}.
+r1 ! {send, rome, 'hello'}.
+r2 ! {send, rome, 'hello'}.
+
+rio ! {send, delhi, 'hello from rio'}.
+
+milan to milan
+r3 ! {send, milan, 'hello'}.

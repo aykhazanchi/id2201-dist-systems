@@ -1,0 +1,54 @@
+Commands for Testing on Different Shells
+
+192.168.1.88
+
+-> start shells
+erl -name india@192.168.1.88 -setcookie routy -connect_all false
+erl -name italy@192.168.1.88 -setcookie routy -connect_all false
+
+-> start router processes in india
+routy:start(r1, mumbai).
+routy:start(r2, delhi).
+
+-> start router processes in italy
+routy:start(r3, milan).
+routy:start(r4, rome).
+
+-> add links between mumbai and delhi
+r2 ! {add, mumbai, {r1, 'india@192.168.1.88'}}.
+r1 ! {add, delhi, {r2, 'india@192.168.1.88'}}.
+
+-> add links between milan and rome
+r4 ! {add, milan, {r3, 'italy@192.168.1.88'}}.
+r3 ! {add, rome, {r4, 'italy@192.168.1.88'}}.
+
+## Gateway
+-> add links between milan and delhi
+r2 ! {add, milan, {r3, 'italy@192.168.1.88'}}.
+r3 ! {add, delhi, {r2, 'india@192.168.1.88'}}.
+
+-> now trigger link-state messages now
+r1 ! broadcast.
+r2 ! broadcast.
+r3 ! broadcast.
+r4 ! broadcast.
+
+-> now update routing table for each 
+r1 ! update.
+r2 ! update.
+r3 ! update.
+r4 ! update.
+
+-> Last part to send messsage now 
+r4 ! {send, mumbai, 'hello'}.
+r3 ! {send, mumbai, 'hello'}.
+r4 ! {send, delhi, 'hello'}.
+r3 ! {send, delhi, 'hello'}.
+
+r1 ! {send, milan, 'hello'}.
+r2 ! {send, milan, 'hello'}.
+r1 ! {send, rome, 'hello'}.
+r2 ! {send, rome, 'hello'}.
+
+milan to milan
+r3 ! {send, milan, 'hello'}.
